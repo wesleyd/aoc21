@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 day3_test_input = [
     "00100",
@@ -37,8 +37,10 @@ def power(inputs):
     return int(γ,2) * int(Ɛ,2)
 
 with open("day03.input") as f:
-    day3a = power(f.read().splitlines())
-    print("Day 3 Part 1 =>", day3a)  # => 3985686
+    day3_input = f.read().splitlines()
+
+day3a = power(day3_input)
+print("Day 3 Part 1 =>", day3a)  # => 3985686
 
 #### Part 2
 
@@ -50,12 +52,30 @@ def popularity_split(lst, digit):
             ones.append(s)
         else:
             zeros.append(s)
-    if len(ones) > len(zeros):
-        return ones, zeros
-    return zeros, ones
+    if len(zeros) > len(ones):
+        return zeros, ones
+    return ones, zeros
 
 def oxygen(lst):
     i = 0
-    while len(lst) > 0 and i < len(lst[0]):
+    while len(lst) > 1 and i < len(lst[0]):
         lst, _ = popularity_split(lst, i)
         i += 1
+    return int(lst[0], 2)
+
+def co2(lst):
+    i = 0
+    while len(lst) > 1 and i < len(lst[0]):
+        _, lst = popularity_split(lst, i)
+        i += 1
+    return int(lst[0], 2)
+
+def life_support(lst):
+    return oxygen(lst) * co2(lst)
+
+got = life_support(day3_test_input)
+if got != 230:
+    raise Exception('life_support on test input got %d want %d' % (got, 230))
+
+day3b = life_support(day3_input)
+print("Day 3 Part 2 =>", day3b)  # => 2555739

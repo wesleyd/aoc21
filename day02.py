@@ -43,13 +43,13 @@ if got != want:
 def PosMul(pos):
     return pos.horizontal * pos.depth
 
-f = open('day02.input')
-day2_input = f.striplines()
-f.close()
+with open('day02.input') as f:
+    day2_input = f.read().splitlines()
+
 day2a = moves(day2_input)
 
 # => (2165,933) *=> 20199445  <-- Wrong!
-print('Day 2 Part 1 :: %s => %s' % (day2a, PosMul(day2a))) 
+print('Day 2 Part 1 =>', PosMul(day2a))
 
 # Part 2
 
@@ -84,4 +84,4 @@ if got != 900:
 
 day2b = Location()
 day2b.moves(day2_input)
-print('Day 2 Part 2 :: %s' % day2b.mult())  # => 1599311480
+print('Day 2 Part 2 =>', day2b.mult())  # => 1599311480
