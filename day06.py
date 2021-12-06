@@ -1,40 +1,55 @@
 #!/usr/bin/env python
 
 import copy
+import collections
 
 day6_test_input = "3,4,3,1,2"
 
 def parse(input):
-    return list(map(int, input.split(",")))
+    school = collections.defaultdict(int)
+    for f in map(int, input.split(",")):
+        school[f] += 1
+    return school
 
-def cycle(fishes):
-    n = len(fishes)
-    for i in range(n):
-        if fishes[i] == 0:
-            fishes.append(8)
-            fishes[i] = 6
+def nfishes(school):
+    return sum(school.values())
+
+def cycle(school):
+    next = collections.defaultdict(int)
+    for k, v in school.items():
+        if k == 0:
+            next[8] += v
+            next[6] += v
         else:
-            fishes[i] -= 1
-    return fishes
+            next[k-1] += v
+    return next
 
-fishes = parse(day6_test_input)
-
-def cycles(fishes, n):
+def cycles(school, n):
     for i in range(n):
-        fishes = cycle(fishes)
-    return fishes
+        school = cycle(school)
+    return school
 
-fishes_18 = cycles(parse(day6_test_input), 18)
-if len(fishes_18) != 26:
-    raise Exception('after 18 cycles, got %d want 26' % len(fishes_18))
+got = nfishes(cycles(parse(day6_test_input), 18))
+if got != 26:
+    raise Exception('after 18 cycles, got %d want 26' % got)
 
-fishes_80 = cycles(parse(day6_test_input), 80)
-if len(fishes_80) != 5934:
-    raise Exception('after 80 cycles, got %d want 26' % len(fishes_80))
+got = nfishes(cycles(parse(day6_test_input), 80))
+if got != 5934:
+    raise Exception('after 80 cycles, got %d want 26' % got)
 
 with open("day06.input") as f:
-    day6_input = list(map(int, f.read().split(',')))
+    day6_input = f.read()
 
-fishes = copy.deepcopy(day6_input)
-day6a = cycles(fishes, 80)
-print("Day 6 Part 1 => %d fishes" % len(day6a))  # => 363101
+school = parse(day6_input)
+day6a = nfishes(cycles(school, 80))
+print("Day 6 Part 1 => %d fishes" % day6a)  # => 363101
+
+### Part 2
+
+got256 = nfishes(cycles(parse(day6_test_input), 256))
+if got256 != 26984457539:
+    raise Exception('after 256 cycles, got %d want 26984457539' % got256)
+
+day6b = nfishes(cycles(parse(day6_input), 256))
+print("Day 6 Part 2 => %d fishes" % day6b) # =>  1644286074024
+
