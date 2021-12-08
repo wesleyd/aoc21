@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ### Day 1
 
@@ -23,11 +23,11 @@ test_count_increases()
 
 def read_ints(filename):
     with open(filename) as f:
-        return map(int, f)
+        return list(map(int, f))
 
 day1_input = read_ints('day01.input')
 day1a = count_increases(day1_input)  # => 1482
-print "Day 1 Part 1: %d" % day1a
+print("Day 1 Part 1 => %d" % day1a)
 
 # Day 1 Part 2
 
@@ -48,4 +48,4 @@ if got != want:
     raise Exception('test_count_increases: got %d want %d' % (got, want))
 
 day1b = count_sliding_increases(day1_input)
-print "Day 1 Part 2: %d" % day1b
+print("Day 1 Part 2 => %d" % day1b)

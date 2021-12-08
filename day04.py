@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
+3
 day4_test_input = """\
 7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
 
@@ -71,13 +71,13 @@ class Game:
         self.cards = list(map(Card, pieces[1:]))
     def play(self):
         for ball in self.balls:
-            print("Playing ball", ball)
+            #print("Playing ball", ball)
             for card in self.cards:
                 card.play1(ball)
                 if card.bingo():
                     sum = card.unmarked_sum()
                     score = ball * sum
-                    print("%d * %d = %d" % (ball, sum, score))
+                    #print("%d * %d = %d" % (ball, sum, score))
                     return score
 
 g = Game(day4_test_input)
@@ -118,22 +118,22 @@ def print_cards(cards):
 def play_badly(game):
     last_ball = -1
     last_sum = -1
-    print_cards(game.cards)
+    #print_cards(game.cards)
     for ball in game.balls:
-        print("Playing ball (badly)", ball)
+        #print("Playing ball (badly)", ball)
         for c in range(len(game.cards)):
             card = game.cards[c]
             if not card:
                 continue
             card.play1(ball)
             if card.bingo():
-                print('Card %d has won!' % c)
+                #print('Card %d has won!' % c)
                 game.cards[c] = None
                 last_ball = ball
                 last_sum = card.unmarked_sum()
-        print_cards(game.cards)
+        #print_cards(game.cards)
         if not any(game.cards):
-            print('No cards left.')
+            #print('No cards left.')
             break
     return last_ball * last_sum
 
