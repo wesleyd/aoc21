@@ -172,3 +172,25 @@ with open('day11.input') as f:
     g = parse(f.read())
     nflashes = stepN(g, 100)
     print('Day 11, part 1 => %d' % nflashes)  # => 1642
+
+### Part 2
+
+def stepSync(grid):
+    """Keep stepping until all octopuses flash!"""
+    noctopuses = len(grid) * len(grid[0])
+    n = 1
+    while True:
+        nflashes = step(grid)
+        if nflashes == noctopuses:
+            return n
+        n += 1
+
+g = parse(test_input)
+got = stepSync(g)
+want = 195
+assert got == want, "stepSync: got %d, want %d" % (got, want)
+
+with open('day11.input') as f:
+    g = parse(f.read())
+    nsteps = stepSync(g)
+    print('Day 11, part 2 => %d' % nsteps)  # => 320
