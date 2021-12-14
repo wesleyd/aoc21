@@ -24,46 +24,44 @@ CN -> C
 """
 
 def parse(input):
-    seed, rest = input.split('\n\n')
+    first, rest = input.split('\n\n')
+    polymer = defaultdict(int)
+    for i in range(1,len(first)):
+        polymer[first[i-1:i+1]] += 1
+    polymer[first[-1]] = 1  # Last element is special
     rules = {}
     for line in rest.splitlines():
         l, r = line.split(' -> ')
         rules[l] = r
-    return seed, rules
-
+    return polymer, rules
 
 def apply(rules, before):
-    after = [before[0]]
-    for i in range(1, len(before)):
-        k = before[i-1:i+1]
-        if k in rules:
-            after.append(rules[k])
-        after.append(before[i])
-    return ''.join(after)
+    polymer = defaultdict(int)
+    for p, n in before.items():
+        if len(p) == 1:  # Last element still special
+            polymer[p] = n
+            continue
+        x = rules[p]
+        q1 = p[0] + x
+        q2 = x + p[1]
+        polymer[q1] += n
+        polymer[q2] += n
+    return polymer
+
+seed, rules = parse(test_input)
+got1 = apply(rules, seed)
+want1 = { 'BC': 1, 'CH': 1, 'CN': 1, 'HB': 1, 'NB': 1, 'NC': 1, 'B': 1 }
+assert got1 == want1, 'test_input, #1: got %s, want %s' % (got1, want1)
 
 def applyN(rules, polymer, N):
     for i in range(N):
         polymer = apply(rules, polymer)
     return polymer
 
-seed, rules = parse(test_input)
-got1 = apply(rules, seed)
-want1 = 'NCNBCHB'
-assert got1 == want1, 'test_input, #1: got %s, want %s' % (got1, want1)
-got2 = apply(rules, got1)
-want2 = 'NBCCNBBBCBHCB'
-assert got2 == want2, 'test_input, #2: got %s, want %s' % (got2, want2)
-got3 = apply(rules, got2)
-want3 = 'NBBBCNCCNBBNBNBBCHBHHBCHB'
-assert got3 == want3, 'test_input, #3: got %s, want %s' % (got3, want3)
-got4 = apply(rules, got3)
-want4 = 'NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB'
-assert got4 == want4, 'test_input, #4: got %s, want %s' % (got4, want4)
-
 def histo(polymer):
     h = defaultdict(int)
-    for c in polymer:
-        h[c] += 1
+    for p, n in polymer.items():
+        h[p[0]] += n
     return h
 
 def spread(h):
@@ -85,4 +83,17 @@ with open('day14.input') as f:
     sp = spread(h)
     print('Day 14, part 1 => %d' % sp)  # => 3342
 
-# Part 2
+### Part 2
+
+polymer, rules = parse(test_input)
+polymer = applyN(rules, polymer, 40)
+h = histo(polymer)
+sp = spread(h)
+assert sp == 2188189693529
+
+with open('day14.input') as f:
+    seed, rules = parse(f.read())
+    polymer = applyN(rules, seed, 40)
+    h = histo(polymer)
+    sp = spread(h)
+    print('Day 14, part 2 => %d' % sp)  # => 3776553567525
