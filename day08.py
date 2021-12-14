@@ -102,8 +102,8 @@ def permute(perm, s):
     # print('permute(%s, %s) => %s' % (perm, s, out))
     return out
 
-p = makeperm('badfgac')
-permute(p,'abcdefg')
+#p = makeperm('badfgac')
+#permute(p,'abcdefg')
 
 perm = makeperm('gbadfac')
 got = permute(perm, 'abcdefg')
@@ -123,7 +123,7 @@ def valid(perm, enums):
     """Whether perm transforms enums into valid segment display."""
     if len(enums) != 10:
         raise Exception('enums must be ten entries long, not %d: %s.' % (len(enums), enums))
-    for eenum in enums:
+    for enum in enums:
         o = ''.join(sorted(permute(perm, enum)))
         if letters2numbers.get(o, -1) == -1:
             return False
@@ -145,10 +145,10 @@ def apply(perm, rights):
         n = letters2numbers.get(o, -1)
         if n == -1:
             # perm *can't* fit rights...
-            print('  permute(%s, %s) => %s, not a number' % (perm2string(perm), r, o))
+            #print('  permute(%s, %s) => %s, not a number' % (perm2string(perm), r, o))
             return None
         display.append(str(n))
-    print('  permute(%s, %s) => %s' % (perm2string(perm), r, ''.join(display)))
+    #print('  permute(%s, %s) => %s' % (perm2string(perm), r, ''.join(display)))
     return ''.join(display)
 
 def invert(perm):
@@ -161,7 +161,7 @@ def solutions(line):
     lhs, rhs = line.split('|')
     lefts, rights = lhs.split(), rhs.split()
     for perm in candidates(lefts):
-        print('Considering candidate %s...' % perm2string(perm))
+        #print('Considering candidate %s...' % perm2string(perm))
         #perm = invert(perm)
         display = apply(perm, rights)
         if display is not None:
@@ -182,27 +182,32 @@ def solve(line):
         #perm = invert(perm)
         display = apply(perm, rights)
         if display is not None:
-            return perm2string(perm, int(display))
+            return int(display) # perm2string(perm)
     return None
 
 # solve('be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe')
 
 tests = {
-        #"acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf": 5353,
+        "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf": 5353,
         "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe": 8394,
-        #"edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc": 9781,
-        #"fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg": 1197,
-        #"fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb": 9361,
-        #"aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea": 4873,
-        #"fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb": 8418,
-        #"dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe": 4548,
-        #"bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef": 1625,
-        #"egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb": 8717,
-        #"gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce": 4315,
+        "edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc": 9781,
+        "fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg": 1197,
+        "fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb": 9361,
+        "aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea": 4873,
+        "fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb": 8418,
+        "dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe": 4548,
+        "bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef": 1625,
+        "egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb": 8717,
+        "gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce": 4315,
 }
 for inp, want in tests.items():
     got = solve(inp)
     if got != want:
         raise Exception('solve(%s): got %s, want %s' % (inp, got, want))
 
-
+with open('day08.input') as f:
+    n = 0
+    day8_input = f.read()
+    for line in day8_input.splitlines():
+        n += solve(line)
+    print('Day 8, part 2 => %d' % n)  # => 1007675
