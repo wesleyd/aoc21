@@ -32,7 +32,7 @@ got, gotfuel = minfuel(crabs)
 if got != 2 or gotfuel != 37:
     raise Exception('test got %d/%d want %d/37' % (got, gotfuel))
 
-with open('day07.input') as f:
+with open('inputs/day07.input') as f:
     crabs = parse(f.read())
     pos, fuel = minfuel(crabs)
     print('Day 7 Part 1 => position %d uses %d fuel => %d' % (pos, fuel, fuel))  # => 357353
@@ -46,7 +46,7 @@ def fuelto(pos, crabs):
         fuel += delta * (delta+1) // 2
     return fuel
 
-with open('day07.input') as f:
+with open('inputs/day07.input') as f:
     crabs = parse(f.read())
     pos, fuel = minfuel(crabs)
     print('Day 7 Part 2 => position %d uses %d fuel => %d' % (pos, fuel, fuel))  # => 104822130

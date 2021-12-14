@@ -25,7 +25,7 @@ def read_ints(filename):
     with open(filename) as f:
         return list(map(int, f))
 
-day1_input = read_ints('day01.input')
+day1_input = read_ints('inputs/day01.input')
 day1a = count_increases(day1_input)  # => 1482
 print("Day 1 Part 1 => %d" % day1a)
 

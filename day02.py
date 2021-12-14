@@ -43,7 +43,7 @@ if got != want:
 def PosMul(pos):
     return pos.horizontal * pos.depth
 
-with open('day02.input') as f:
+with open('inputs/day02.input') as f:
     day2_input = f.read().splitlines()
 
 day2a = moves(day2_input)

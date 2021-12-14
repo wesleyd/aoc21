@@ -168,7 +168,7 @@ got = stepN(g, 100)
 want = 1656
 assert got == want, "Wrong number of flashes after 100 steps: got %d, want %d" % (got, want)
 
-with open('day11.input') as f:
+with open('inputs/day11.input') as f:
     g = parse(f.read())
     nflashes = stepN(g, 100)
     print('Day 11, part 1 => %d' % nflashes)  # => 1642
@@ -190,7 +190,7 @@ got = stepSync(g)
 want = 195
 assert got == want, "stepSync: got %d, want %d" % (got, want)
 
-with open('day11.input') as f:
+with open('inputs/day11.input') as f:
     g = parse(f.read())
     nsteps = stepSync(g)
     print('Day 11, part 2 => %d' % nsteps)  # => 320

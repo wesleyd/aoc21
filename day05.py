@@ -97,7 +97,7 @@ got = noverlaps(mesh)
 if got != 5:
     raise Exception('test mesh has %d overlaps, want 5' % got)
 
-with open("day05.input") as f:
+with open("inputs/day05.input") as f:
     day5_input = f.read()
     day5_lines = parse(day5_input)
     day5_mesh = straight(day5_lines)
@@ -169,7 +169,7 @@ got = noverlaps(mesh)
 if got != 12:
     raise Exception('test mesh has %d overlaps, want 12' % got)
 
-with open("day05.input") as f:
+with open("inputs/day05.input") as f:
     day5_input = f.read()
     day5_lines = parse(day5_input)
     day5_mesh = diangley(day5_lines)

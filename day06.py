@@ -37,7 +37,7 @@ got = nfishes(cycles(parse(day6_test_input), 80))
 if got != 5934:
     raise Exception('after 80 cycles, got %d want 26' % got)
 
-with open("day06.input") as f:
+with open("inputs/day06.input") as f:
     day6_input = f.read()
 
 school = parse(day6_input)

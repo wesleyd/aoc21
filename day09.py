@@ -33,7 +33,7 @@ def risk(g):
 
 assert risk(gridify(test_input)) == 15
 
-with open('day09.input') as f:
+with open('inputs/day09.input') as f:
     g = gridify(f.read())
     print('Day 9 Part 1 => %d' % risk(g))  # => 489
 
@@ -86,6 +86,6 @@ def mul3basins(g):
 
 assert mul3basins(gridify(test_input)) == 1134
 
-with open('day09.input') as f:
+with open('inputs/day09.input') as f:
     g = gridify(f.read())
     print('Day 9 part 2 => %d' % mul3basins(g))

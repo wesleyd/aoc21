@@ -51,7 +51,7 @@ want = 26
 if got != want:
     raise Exception('part1 test: got %d, want %d' % (got, want))
 
-with open('day08.input') as f:
+with open('inputs/day08.input') as f:
     day8_input = f.read()
     day8a = nuniques(parse(day8_input))
     print('Day 8 Part 1  =>', day8a)  # => 272
@@ -205,7 +205,7 @@ for inp, want in tests.items():
     if got != want:
         raise Exception('solve(%s): got %s, want %s' % (inp, got, want))
 
-with open('day08.input') as f:
+with open('inputs/day08.input') as f:
     n = 0
     day8_input = f.read()
     for line in day8_input.splitlines():

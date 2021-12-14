@@ -76,7 +76,7 @@ assert got == want, 'histo after ten tries: got %s, want %s' % (got, want)
 sp = spread(got)
 assert sp == 1588
 
-with open('day14.input') as f:
+with open('inputs/day14.input') as f:
     seed, rules = parse(f.read())
     polymer = applyN(rules, seed, 10)
     h = histo(polymer)
@@ -91,7 +91,7 @@ h = histo(polymer)
 sp = spread(h)
 assert sp == 2188189693529
 
-with open('day14.input') as f:
+with open('inputs/day14.input') as f:
     seed, rules = parse(f.read())
     polymer = applyN(rules, seed, 40)
     h = histo(polymer)

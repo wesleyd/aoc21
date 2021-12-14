@@ -85,7 +85,7 @@ got = g.play()
 if got != 4512:
     raise Exception('Got %d want 4512' % got)
 
-with open("day04.input") as f:
+with open("inputs/day04.input") as f:
     day4_input = f.read()
     g = Game(day4_input)
     score = g.play()
@@ -142,7 +142,7 @@ got = play_badly(g)
 if got != 1924:
     raise Exception('Got %d want 1924' % got)
 
-with open("day04.input") as f:
+with open("inputs/day04.input") as f:
     day4_input = f.read()
     g = Game(day4_input)
     score = play_badly(g)

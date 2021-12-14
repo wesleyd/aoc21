@@ -116,7 +116,7 @@ got = count(walk(parse(even_larger_example)))
 want = 226
 assert got == want, "even_larger_example: got %d, want %d" % (got, want)
 
-with open('day12.input') as f:
+with open('inputs/day12.input') as f:
     g = parse(f.read())
     n = count(walk(g))
     print('Day 12 part 1 => %d' % n)
@@ -185,7 +185,7 @@ got = count(walk(parse(even_larger_example)))
 want = 3509
 assert got == want, "even larger example, one wee dup ok: got %d, want %d" % (got, want)
 
-with open('day12.input') as f:
+with open('inputs/day12.input') as f:
     g = parse(f.read())
     n = count(walk(g))
     print('Day 12 part 2 => %d' % n)  # => 149385  (Slow: tens of seconds!!

@@ -87,14 +87,14 @@ want = 17
 assert got == want, 'first fold to test input: got %d, want %d' % (got, want)
 
 
-with open('day13.input') as f:
+with open('inputs/day13.input') as f:
     graph, folds = parse(f.read())
     g2 = fold1(graph, folds[0])
     print('Day 13, part 1 => %d' % len(g2))  # => 621
 
 ### Part 2
 
-with open('day13.input') as f:
+with open('inputs/day13.input') as f:
     graph, folds = parse(f.read())
     print('Day 13, part 2 ...')
     display(foldall(graph, folds))  # => HKUJGAJZ

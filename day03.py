@@ -36,7 +36,7 @@ def power(inputs):
             Ɛ += '1'
     return int(γ,2) * int(Ɛ,2)
 
-with open("day03.input") as f:
+with open("inputs/day03.input") as f:
     day3_input = f.read().splitlines()
 
 day3a = power(day3_input)

@@ -55,7 +55,7 @@ want = 26397
 if got != want:
     raise Exception('score(test_input): got %d, want %d' % (got, want))
 
-with open('day10.input') as f:
+with open('inputs/day10.input') as f:
     sc = score(f.read())
     print('Day 10 Part 1 => %d' % sc)  # => 240123
 
@@ -106,6 +106,6 @@ want = 288957
 if got != want:
     raise Exception('best(test_input): got %d, want %d' % (got, want))
 
-with open('day10.input') as f:
+with open('inputs/day10.input') as f:
     sc = best(f.read())
     print('Day 10 Part 2 => %d' % sc)  # =>  3260812321
