@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import math
+
 def hex_to_bits(h):
     """returns turns nybbles in a string into bits in a string, pads properly"""
     return ''.join(['{0:04b}'.format(int(nybble, 16)) for nybble in h])
@@ -61,9 +63,10 @@ def parse_packet_internal(bits, indent):
 
 def parse_packet(h, indent=''):
     p, rest = parse_packet_internal(hex_to_bits(h), indent)
-    z = int(rest, 2)
-    if z != 0:
-        raise Exception('bad remainder %d/%s, not zero' % (z, rest))
+    if len(rest) > 0:
+        z = int(rest, 2)
+        if z != 0:
+            raise Exception('bad remainder %d/%s, not zero' % (z, rest))
     return p
 
 assert parse_packet('D2FE28')['LITERAL'] == 2021
@@ -87,3 +90,48 @@ with open('inputs/day16.input') as f:
     p = parse_packet(f.read().strip())
     vv = add_up_version_numbers(p)
     print('Day 16 part 1 => %d' % vv)
+
+### Part 2
+
+def apply(p):
+    if p['T'] == 4:   # literal packet
+        return p['LITERAL']
+    elif p['T'] == 0:   # sum
+        return sum([apply(q) for q in p['PACKETS']])
+    elif p['T'] == 1:  # product
+        return math.prod([apply(q) for q in p['PACKETS']])
+    elif p['T'] == 2:  # mininmum
+        return min([apply(q) for q in p['PACKETS']])
+    elif p['T'] == 3:  # mininmum
+        return max([apply(q) for q in p['PACKETS']])
+    elif p['T'] == 5:  # greater than
+        pp = p['PACKETS']
+        if apply(pp[0]) > apply(pp[1]):
+            return 1
+        return 0
+    elif p['T'] == 6:  # less than
+        pp = p['PACKETS']
+        if apply(pp[0]) < apply(pp[1]):
+            return 1
+        return 0
+    elif p['T'] == 7:  # equal
+        pp = p['PACKETS']
+        if apply(pp[0]) == apply(pp[1]):
+            return 1
+        return 0
+    else:
+        raise Exception('unknown packet type %d' % p['T'])
+
+assert apply(parse_packet('C200B40A82')) == 3
+assert apply(parse_packet('04005AC33890')) == 54
+assert apply(parse_packet('880086C3E88112')) == 7
+assert apply(parse_packet('CE00C43D881120')) == 9
+assert apply(parse_packet('D8005AC2A8F0')) == 1
+assert apply(parse_packet('F600BC2D8F')) == 0
+assert apply(parse_packet('9C005AC2F8F0')) == 0
+assert apply(parse_packet('9C0141080250320F1802104A08')) == 1
+
+with open('inputs/day16.input') as f:
+    p = parse_packet(f.read().strip())
+    x = apply(p)
+    print('Day 16 part 2 => %d' % x)
