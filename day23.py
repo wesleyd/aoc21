@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-import difflib
-
-from itertools import permutations
 from heapdict import heapdict
 
 example_input = """\
@@ -49,7 +46,6 @@ def unparse(maze, positions):
 def test_unparse():
     maze, positions = parse(example_input)
     got = unparse(maze, positions)
-    #assert got == example_input, ''.join(difflib.unified_diff(got, example_input))
     assert got == example_input, (got, example_input)
 test_unparse()
 
@@ -149,17 +145,90 @@ def dijkstra(positions, goal):
                 #prev[v] = u
     return None
 
-sorted_goal = (('A', 3, 2), ('A', 3, 3), ('B', 5, 2), ('B', 5, 3), ('C', 7, 2), ('C', 7, 3), ('D', 9, 2), ('D', 9, 3))
+goal2_input = """\
+#############
+#...........#
+###A#B#C#D###
+  #A#B#C#D#
+  #########"""
 
-def find_cheapest(input):
+def parse_goal2():
+    _, positions = parse(goal2_input)
+    return positions
+goal2 = parse_goal2()
+
+def find_cheapest(input, goal):
     maze, positions = parse(input)
     cheapest = float('inf')
-    cost = dijkstra(positions, sorted_goal)
+    cost = dijkstra(positions, goal)
     if cost < cheapest:
         cheapest = cost
     return cheapest
 
-assert find_cheapest(example_input) == 12521
+assert find_cheapest(example_input, goal2) == 12521
 
 with open('inputs/day23.input') as f:
-    print('Day 23 part 1 => %s' % find_cheapest(f.read()))
+    print('Day 23 part 1 => %s' % find_cheapest(f.read(), goal2))
+
+def blocking(positions, c, x, y):
+    for c2, x2, y2 in positions:
+        if x2 == x and y2 > y and c2 != c:
+            return True
+    return False
+
+def room_contains_hostiles(roomx, positions, c):
+    for (c2,x,y) in positions:
+        if x == roomx and c2 != c:
+            return True
+    return False
+
+def all_moves(positions, goalx):
+    """yields all moves possible from positions towards goalx"""
+    occupied = {}
+    for (c,x,y) in positions:
+        occupied[(x,y)] = c
+    for (c,x,y) in positions:
+        if x == goalx[c] and not blocking(positions, c, x, y):
+            # We're home, we don't have to move.
+            continue
+        # We should move, if we can. Let's try moving home...
+        if x != goalx[c] and not room_contains_hostiles(goalx[c], positions, c):
+            if path_clear(occupied, (x,y), (goalx[c], 5)):
+                yield (c, (x,y), (goalx[c], 5))
+            elif path_clear(occupied, (x,y), (goalx[c], 4)):
+                yield (c, (x,y), (goalx[c], 4))
+            elif path_clear(occupied, (x,y), (goalx[c], 3)):
+                yield (c, (x,y), (goalx[c], 3))
+            elif path_clear(occupied, (x,y), (goalx[c], 2)):
+                yield (c, (x,y), (goalx[c], 2))
+        elif y > 1:
+            # We can move to the corridor only if we're in a room
+            for dest in corridor_stops:
+                if path_clear(occupied, (x,y), dest):
+                    yield (c, (x,y), dest)
+                    
+def bludgeon(input):
+    lines = input.splitlines()
+    lines.insert(3, "  #D#C#B#A#")
+    lines.insert(4, "  #D#B#A#C#")
+    return '\n'.join(lines)
+
+ideal_goal4 = """\
+#############
+#...........#
+###A#B#C#D###
+  #A#B#C#D#
+  #A#B#C#D#
+  #A#B#C#D#
+  #########"""
+
+def parse_goal4():
+    _, positions = parse(ideal_goal4)
+    return positions
+goal4 = parse_goal4()
+
+#bludgeon(example_input)
+assert find_cheapest(bludgeon(example_input), goal4) == 44169
+
+with open('inputs/day23.input') as f:
+    print('Day 23 part 2 => %s' % find_cheapest(bludgeon(f.read()), goal4))
