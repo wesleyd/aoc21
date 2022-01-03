@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+example_input = """\
+#############
+#...........#
+###B#C#B#D###
+  #A#D#C#A#
+  #########"""
+
+# #############
+# #12.3.4.5.67#
+# ###8#9#A#B###
+#   #C#D#E#F#
+#   #########
+
+def parse(input):
+    grid = {'A': set(), 'B': set(), 'C': set(), 'D': set()}
+    lines = input.splitlines()
+    for i, c in enumerate(lines[2].strip().strip('#').split('#') + 
+                          lines[3].strip().strip('#').split('#')):
+        grid[c].add(8+i)
+    return grid
+
+parse(example_input) == {'A': set([0xC, 0xF]), 'B': set([0x8, 0xA]), 'C': set([0x9, 0xE]), 'D': set([0xB, 0xD])}
+
+def unparse(grid):
+    places = {}
+    for c, pp in grid.items():
+        for p in pp:
+            places[p] = c
+    lines = ["#############"]
+    lines.append(''.join([
+        '#', places.get(1, '.'), places.get(2, '.'),
+        '.', places.get(3, '.'),
+        '.', places.get(4, '.'),
+        '.', places.get(5, '.'),
+        '.', places.get(6, '.'), places.get(7, '.'),
+        '#']))
+    lines.append(''.join([ '###',
+        places.get(8, '.'), '#',
+        places.get(9, '.'), '#',
+        places.get(10, '.'), '#',
+        places.get(11, '.'), '###']))
+    lines.append(''.join([ '  #',
+        places.get(12, '.'), '#',
+        places.get(13, '.'), '#',
+        places.get(14, '.'), '#',
+        places.get(15, '.'), '#']))
+    lines.append("  #########")
+    return '\n'.join(lines)
+
+assert unparse(parse(example_input))  == example_input
+
+def moves(grid):

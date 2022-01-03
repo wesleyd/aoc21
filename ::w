@@ -1,0 +1,509 @@
+#!/usr/bin/env python3
+
+import difflib
+
+from itertools import permutations
+from heapdict import heapdict
+
+example_input = """\
+#############
+#...........#
+###B#C#B#D###
+  #A#D#C#A#
+  #########"""
+
+def parse(input):
+    maze = {}
+    positions = []
+    for y, line in enumerate(input.splitlines()):
+        for x, c in enumerate(line):
+            if c in ('A', 'B', 'C', 'D'):
+                maze[(x,y)] = '.'
+                positions.append((c, x, y))
+            elif c in ('.', '#'):
+                maze[(x,y)] = c
+    return maze, tuple(sorted(positions))
+
+def extents(maze):
+    xlo, xhi = float('inf'), float('-inf')
+    ylo, yhi = float('inf'), float('-inf')
+    for x, y in maze.keys():
+        if x < xlo: xlo = x
+        if x > xhi: xhi = x
+        if y < ylo: ylo = y
+        if y > yhi: yhi = y
+    return (xlo, xhi, ylo, yhi)
+
+def unparse(maze, positions):
+    lines = []
+    xlo, xhi, ylo, yhi = extents(maze)
+    for y in range(yhi+1):
+        line = []
+        for x in range(xhi+1):
+            line.append(maze.get((x,y), ' '))
+        lines.append(line)
+    for (c, x, y) in positions:
+        lines[y][x] = c
+    return '\n'.join((''.join(line).rstrip() for line in lines))
+
+def test_unparse():
+    maze, positions = parse(example_input)
+    got = unparse(maze, positions)
+    #assert got == example_input, ''.join(difflib.unified_diff(got, example_input))
+    assert got == example_input, (got, example_input)
+test_unparse()
+
+corridor_stops = {(1,1), (2,1), (4,1), (6,1), (8,1), (10,1), (11,1)}
+
+def sign(x):
+    return -1 if x < 0 else 1
+
+def path_clear(occupied, begin, end):
+    x1, y1 = begin
+    x2, y2 = end
+    assert y1 > 1
+    for y in range(y1, 1, -1)):
+        if (x,y) in occupied: return False
+    for x in range(x1, x2+1, sign(x2-x1)):
+        if (x,y) in occupied: return False
+    for y in range(y, y2+1)
+
+
+
+def all_moves(positions, goalx):
+    """yields all moves possible from positions towards goalx"""
+    occupied = {}
+    for (c,x,y) in positions:
+        occupied[(x,y)] = c
+    for (c,x,y) in positions:
+        if y == 3 and x == goalx[c]:
+            # We're home, we don't have to move.
+            continue
+        if y == 2 and x == goalx[c] and (c, x, 3) in positions:
+            # We're home, we're not blocking an amphipod that wants out
+            continue
+        # We should move, if we can. Let's try moving home...
+        if path_clear(occupied, (x,y), (goalx[c], 3)):
+            yield ((x,y), (goalx[c], 3))
+        elif path_clear(occupied, (x,y), (goalx[c], 2)) and (c, goalx[c], 3) in positions:
+            # Move to the outer position : inner position is the same as us
+            yield ((x,y), (goalx[c], 2))
+        elif y > 1:
+            # We can move to the corridor only if we're in a room
+            for dest in corridor_stops:
+                if path_clear(occupied, (x,y), dest):
+                    yield (c, (x,y), dest)
+
+### We use this dict-of-tuples-to-letters ("dot") format only to calculate walking paths for individual amphipods.
+
+def dotify(maze):
+    """Turn a maze into dict-of-tuples-to-letters format"""
+    dot = {}
+    for y, line in enumerate(maze.splitlines()):
+        for x, c in enumerate(line):
+            #if c in ('A', 'B', 'C', 'D', '.'):
+            dot[(x,y)] = c
+    return dot
+
+def undotify(dot):
+    xlo, xhi, ylo, yhi = extents(dot)
+    lines = []
+    for y in range(ylo, yhi+1):
+        lines.append(''.join([dot.get((x,y), ' ') for x in range(xlo, xhi+1)]).rstrip())
+    return '\n'.join(lines)
+assert undotify(dotify(example_maze)) == example_maze
+
+# Amphipods move at most twice - once to leave their room, and once to move into
+# their destination room. Let's iterate over all eight possbile arrangements of
+# destinations, and then iterate the full space of possible moves.
+
+
+def all_goals():
+    """yields all possible x-value permutations of goal states"""
+    for a, b, c, d in permutations(known_amphipods):
+        goal = {a: 3, b: 5, c: 7, d: 9}
+        yield goal
+
+corridor_stops = {(1,1), (2,1), (4,1), (6,1), (8,1), (10,1), (11,1)}
+
+def all_possible_moves(dot, goal):
+    """yield all moves (start, end) possible from dot towards goal"""
+    for xy, c in dot.items():
+        if c not in known_amphipods:
+            continue  # it's a corridor or a wall or something
+        x, y = xy
+        assert y in (1, 2, 3)
+        if y in (2, 3):
+            # We're in *a* home, but is it *our* home?
+            if goal[c] == x:  # Are we home already?
+                # OK, it *might* be our home...
+                if y == 3:
+                    # It's definitely our home
+                    continue
+                if y == 2 and dot[(x,3)] == c:
+                    # Yep, we're definitely home
+                    continue 
+                # Ah, we're home, sure, but we're also blocking in a different
+                # type of amphipod, so we have to move. Fall through, move as if
+                # we weren't home...
+        if y == 1:
+            # We're in the corridor. We can only move from here to home.
+            if dot[(goal[c], 2)] != '.':
+                # We can't move, there's something in our spot
+                continue
+            # TODO: There needs to be a clear path between here and home!
+            if x > goal[c]:
+                if not all((dot[(x2,y)] == '.' for x2 in range(goal[c], x))):
+                    # There's something in our way, alas
+                    continue
+            elif x < goal[c]:
+                if not all((dot[(x2,y)] == '.' for x2 in range(x+1, goal[c]+1))):
+                    # There's something in our way, alas
+                    continue
+            if dot[(goal[c], 3)] == '.':
+                # We can move deep into the room. Do it!
+                yield (xy, (goal[c], 3))
+                continue
+            if dot[(goal[c], 3)] == c:
+                yield (xy, (goal[c], 2))
+                continue
+        # At this point, we're in a room, and it's not our room, so we have
+        # to move ... if we can. Can we?
+        if y == 3 and dot[(x, 2)] != '.':
+            # We can't move.
+            continue
+        # We can move. Yield all the places we can move to...
+        for x2 in range(x, 12):
+            if dot[(x2,1)] != '.':
+                break
+            if (x2,1) in corridor_stops:
+                yield (xy, (x2,1))
+        for x2 in range(x, 0, -1):
+            if dot[(x2,1)] != '.':
+                break
+            if (x2,1) in corridor_stops:
+                yield (xy, (x2,1))
+        # We could yield a direct move home, maybe, but it messes up a manhattan
+        # distance calculation later, and there's no need: *a* solution will
+        # have this amphipod moving in two steps.
+
+amphipod_costs = {
+    'A': 1,
+    'B': 10,
+    'C': 100,
+    'D': 1000,
+}
+
+def apply_move(dot, move):
+    """applies a move (start, end) to dot and returns a new dot and the cost"""
+    start, end = move
+    dot2 = {}
+    for xy, c in dot.items():
+        dot2[xy] = c
+    amphipod = dot2[start]
+    dot2[start], dot2[end] = dot2[end], dot2[start]
+    dist = abs(end[0] - start[0]) + abs(end[1] - start[1])
+    return dot2, dist * amphipod_costs[amphipod]
+
+def invert_goal(goal):
+    igoal = {}
+    for c, xy in goal.items():
+        assert c in known_amphipods
+        igoal[xy] = c
+    return igoal
+
+def are_we_home(dot, igoal):
+    return (dot[(3,2)] == dot[(3,3)] == igoal[3] and
+            dot[(5,2)] == dot[(5,3)] == igoal[5] and
+            dot[(7,2)] == dot[(7,3)] == igoal[7] and
+            dot[(9,2)] == dot[(9,3)] == igoal[9])
+assert are_we_home(dotify("""\
+#############
+#...........#
+###A#B#C#D###
+  #A#B#C#D#
+  #########"""), {3: 'A', 5: 'B', 7: 'C', 9: 'D'})
+
+def replay_maze(maze, history):
+    print('$%d\n%s\n' % (0, maze))
+    for move in history:
+        dot = dotify(maze)
+        dot, cost = apply_move(dot, move)
+        maze = undotify(dot)
+        print('$%d\n%s\n' % (cost, maze))
+
+def brute_force(maze):
+    i = 0
+    cheapest_cost = float('inf')
+    cheapest_history = []
+    #for goal in all_goals():
+    for goal in [{'A': 3, 'B': 5, 'C': 7, 'D': 9}]:
+        print('Considering goal %s' % goal)
+        igoal = invert_goal(goal)
+        states = [(dotify(maze), 0, [])]
+        while states:
+            dot, cost, history = states.pop(-1)
+            #print('Starting from %s $%s' % (dot, cost))
+            for move in all_possible_moves(dot, goal):
+                i += 1
+                if i % 100000 == 0:
+                  print('What about %s %s (states=%d)' % (move, dot[move[0]], len(states)))
+                dot2, cost_delta = apply_move(dot, move)
+                cost += cost_delta
+                if cost > cheapest_cost:
+                    break
+                history2 = history + [move]
+                if are_we_home(dot2, igoal) and cost < cheapest_cost:
+                    print('Found a new cheapest cost %s < %s:' % (cost, cheapest_cost))
+                    cheapest_history = history2
+                    cheapest_cost = cost
+                states.append((dot2, cost, history2))
+    replay_maze(maze, history)
+    return cheapest_cost
+
+brute_force(example_maze)
+
+brute_force("""\
+#############
+#.....D.D.A.#
+###.#B#C#.###
+  #A#B#C#.#
+  #########""")
+
+# TODO: Do a dijstra version of this!!!
+
+
+
+#def dijkstra(dot, goal):
+#    q = heapdict()
+#    q[dot] = 0
+#    #prev = {}
+#    #prev[start] = None
+#    i = 0
+#    while q:
+#        i += 1
+#        if i % 10000 == 0:
+#            print('Considering maze $%s:\n%s\n' % (cost, u))
+#        u, cost = q.popitem()
+#        if home(u):
+#            print("early")
+#            print(u, cost)
+#            return cost
+#        for v, delta in all_mazes_from(u):
+#            alt = cost + delta
+#            if alt < q.get(v, float('inf')):
+#                q[v] = alt
+#                #prev[v] = u
+#    print(v, cost)
+#    return cost
+#
+#
+#
+#
+#
+#
+#
+#
+#### Given a single maze state, where can a single individual amphipod walk to?
+#
+#def where_can_one_amphipod_go(dot, xy, goals, amphipod=None, visited=None):
+#    """yields all possible paths the amphipod at xy can take."""
+#    if amphipod is None:
+#        amphipod = dot[xy]
+#    elif dot[xy] != '.':
+#        return
+#    if amphipod not in ('A', 'B', 'C', 'D'):
+#        raise Exception('No amphipod at %s: %s' % (xy, amphipod))
+#    if visited is None:
+#        visited = []
+#    if xy in visited:
+#        return
+#    x, y = xy
+#    visited = visited[:]
+#    visited.append(xy)
+#    if len(visited) > 1:
+#        # If we can stop here, yield a path...
+#        if y == 1 and x in (1, 2, 4, 6, 8, 10, 11):  # It can stop here
+#            yield visited
+#        elif y == 2 and dot[(x,2)] == amphipod:
+#            if len(visited) > 1:  # We're coming in, not going out
+#                yield visited
+#        elif y == 3:
+#            yield visited
+#    yield from where_can_one_amphipod_go(dot, (x-1, y), amphipod, visited)
+#    yield from where_can_one_amphipod_go(dot, (x+1, y), amphipod, visited)
+#    yield from where_can_one_amphipod_go(dot, (x, y-1), amphipod, visited)
+#    yield from where_can_one_amphipod_go(dot, (x, y+1), amphipod, visited)
+#assert set(map(tuple, where_can_one_amphipod_go(dotify(example_maze), (3, 2)))) == set([
+#    ((3,2), (3,1), (2,1), (1,1)),
+#    ((3,2), (3,1), (2,1)),
+#    ((3,2), (3,1), (4,1)),
+#    ((3,2), (3,1), (4,1), (5,1), (6,1)),
+#    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1)),
+#    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1)),
+#    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1), (11,1))])
+#
+##def where_can_one_amphipod_go(dot, xy, amphipod=None, visited=None):
+##    """yields all possible paths the amphipod at xy can take."""
+##    if amphipod is None:
+##        amphipod = dot[xy]
+##    elif dot[xy] != '.':
+##        return
+##    if amphipod not in ('A', 'B', 'C', 'D'):
+##        raise Exception('No amphipod at %s: %s' % (xy, amphipod))
+##    if visited is None:
+##        visited = []
+##    if xy in visited:
+##        return
+##    x, y = xy
+##    visited = visited[:]
+##    visited.append(xy)
+##    if len(visited) > 1:
+##        # If we can stop here, yield a path...
+##        if y == 1 and x in (1, 2, 4, 6, 8, 10, 11):  # It can stop here
+##            yield visited
+##        elif y == 2 and dot[(x,2)] == amphipod:
+##            if len(visited) > 1:  # We're coming in, not going out
+##                yield visited
+##        elif y == 3:
+##            yield visited
+##    yield from where_can_one_amphipod_go(dot, (x-1, y), amphipod, visited)
+##    yield from where_can_one_amphipod_go(dot, (x+1, y), amphipod, visited)
+##    yield from where_can_one_amphipod_go(dot, (x, y-1), amphipod, visited)
+##    yield from where_can_one_amphipod_go(dot, (x, y+1), amphipod, visited)
+##assert set(map(tuple, where_can_one_amphipod_go(dotify(example_maze), (3, 2)))) == set([
+##    ((3,2), (3,1), (2,1), (1,1)),
+##    ((3,2), (3,1), (2,1)),
+##    ((3,2), (3,1), (4,1)),
+##    ((3,2), (3,1), (4,1), (5,1), (6,1)),
+##    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1)),
+##    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1)),
+##    ((3,2), (3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1), (11,1))])
+#
+#def where_are_amphipods(dot):
+#    """yields the (x,y)'s of the amphipods in lol"""
+#    for xy, amphipod in dot.items():
+#        if amphipod in ('A', 'B', 'C', 'D'):
+#            yield (xy, amphipod)
+#
+#assert set(where_are_amphipods(dotify(example_maze))) == set([
+#    ((3,2),'B'), ((5,2),'C'), ((7,2),'B'), ((9,2),'D'),
+#    ((3,3),'A'), ((5,3),'D'), ((7,3),'C'), ((9,3),'A') ])
+#
+#def path_cost(amphipod, path):
+#    unit = amphipod_costs[amphipod]
+#    cost = 0
+#    for i in range(1, len(path)):
+#        cost += abs(path[i][0] - path[i-1][0]) + abs(path[i][1] - path[i-1][1])
+#    return cost * unit
+#assert path_cost('D', [(9,2), (9,1), (10,1)]) == 2000
+#assert path_cost('C', [(9,2), (9,1), (10,1), (11,1)]) == 300
+#
+##def apply_path(dot, path):
+##    """returns a new dot, having move an amphipod along path"""
+##    dot = copy.deepcopy(dot)
+##    amphpipod = dot[path[0]]
+##    assert dot[path[-1]] == '.'
+##    dot[path[0]], dot[path[-1]] = dot[path[-1]], dot[path[0]]
+##    return dot
+#
+#def apply_path(dot, path):
+#    """returns a new dot, having move an amphipod along path"""
+#    a = path[0]
+#    b = path[-1]
+#    assert dot[a] in ('A', 'B', 'C', 'D')
+#    assert dot[b] == '.'
+#    dot2 = {}
+#    for p, c in dot.items():
+#        dot2[p] = c
+#    dot2[a], dot2[b] = dot2[b], dot2[a]
+#    return dot2
+#
+#def all_mazes_from(maze):
+#    """yields all possible (maze,cost)s moveable from maze"""
+#    dot = dotify(maze)
+#    for (xy, amphipod) in where_are_amphipods(dot):
+#        for path in where_can_one_amphipod_go(dot, xy):
+#            cost = path_cost(amphipod, path)
+#            dot2 = apply_path(dot, path)
+#            maze2 = undotify(dot2)
+#            yield (maze2, cost)
+#
+##for m, c in list(all_mazes_from(example_maze)):
+##    print(c)
+##    print(m)
+##    print()
+#
+#### A maze is a vertex now in graph parlance, and a move is an edge.
+#
+#def home(maze):
+#    """are all the amphipods in maze home?"""
+#    lines = maze.splitlines()
+#    return '.' not in lines[2] and lines[2][2:10] == lines[3][2:10]  # LOL
+#assert not home(example_maze)
+#assert home("""\
+##############
+##...........#
+####B#C#D#A###
+#  #B#C#D#A#
+#  #########""")
+#
+#def brute_force(maze):
+#    cheapest_cost = float('inf')
+#    cheapest_history = []
+#    q = [(maze, 0, [])]
+#    i = 1
+#    while q:
+#        (maze, cost, history) = q.pop(0)
+#        if (i % 1000) == 0:
+#            print('Considering cost=%d, len(history)=%d' % (cost, len(history)))
+#        i += 1
+#        for maze2, delta in all_mazes_from(maze):
+#            if maze2 in history:
+#                continue
+#            cost2 = cost + delta
+#            if cost2 > cheapest_cost:
+#                continue
+#            history2 = history + [maze2]
+#            if home(maze2):
+#                if cost2 < cheapest_cost:
+#                    print('Found a path costing %d, cheaper than %d' % (cost2, cheapest_cost))
+#                    cheapest_cost = cost2
+#                    cheapest_history = history2
+#            else:
+#                q.append((maze2, cost2, history2))
+#    return (cheapest_cost, cheapest_history)
+##brute_force(example_maze)
+#
+#def dijkstra(start):
+#    q = heapdict()
+#    q[start] = 0
+#    #prev = {}
+#    #prev[start] = None
+#    i = 0
+#    while q:
+#        i += 1
+#        if i % 10000 == 0:
+#            print('Considering maze $%s:\n%s\n' % (cost, u))
+#        u, cost = q.popitem()
+#        if home(u):
+#            print("early")
+#            print(u, cost)
+#            return cost
+#        for v, delta in all_mazes_from(u):
+#            alt = cost + delta
+#            if alt < q.get(v, float('inf')):
+#                q[v] = alt
+#                #prev[v] = u
+#    print(v, cost)
+#    return cost
+##print(dijkstra(example_maze))
+#print(dijkstra("""\
+##############
+##...........#
+####B#A#C#D###
+#  #A#B#C#D#
+#  #########"""))
+#
+#
+#
